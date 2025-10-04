@@ -1,13 +1,13 @@
 # Robocon 2025 A Team Master Node
 
 ## UART通信
-Netetra作のプロトコルSBTPを使用します。
-https://github.com/Netetra/sbtp
+Netetra作のプロトコルSBTPを使用します。  https://github.com/Netetra/sbtp
 
 ### NRCC-2025 (Niihama Robot Control Commands 2025)
 #### 特徴
 - 最初の1byteはコマンド
 - ビックデンディアンを使用
+- こちらのプロトコルも含みます https://github.com/NiiRoboKen/robocon-2025-a-esp32-ps4
 
 #### 受信成功
 ```
@@ -23,6 +23,8 @@ https://github.com/Netetra/sbtp
 ```
 | 0x02 | error code (uint_8)|
 ```
+
+--- 
 
 #### 独立ステアリング目標値送信(raspi -> esp)
 ```
