@@ -1,4 +1,4 @@
-#pragma onece 
+#pragma once 
 
 #include <Arduino.h>
 
@@ -128,6 +128,7 @@ class Sbtp2 {
         static uint8_t dataLen = 0, index = 0;
         static uint8_t tempBuf[256];
         static bool escFlag = false;
+        
 
         while (Serial2.available()) {
             uint8_t b = Serial2.read();
