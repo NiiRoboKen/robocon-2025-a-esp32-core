@@ -34,7 +34,8 @@ const int ENCODER_PIN_B[2] = {34, 32};
 //Robot
 //===========================================
 
-SwerveDrive str;
+Robot robot;
+//SwerveDrive str;
 
 //===========================================
 
@@ -100,10 +101,11 @@ void Task0Function( void * pvParameters ) {
         Serial.printf("%02X ", uart2_data[i]);
       }
       Serial.println();
-      uart2CommandCheck(uart2_data);
+      //uart2CommandCheck(uart2_data);
+      robot.uart2CommandHandle(uart2_data);
     }
     //str.get();
-    delay(1);
+    delay(5);
   }
 }
 
@@ -119,18 +121,6 @@ void Task1Function( void * pvParameters ) {
 }
 
 void loop() {}
-
-void uart2CommandCheck(uint8_t *uart2_data) {
-  switch (uart2_data[0])
-  {
-  case 0x11:
-    str.ps4Control(uart2_data[1],(int16_t)(uart2_data[2] << 8 | uart2_data[3]),uart2_data[4]);
-    break;
-  
-  default:
-    break;
-  }
-}
 
 
 //自己位置推定
