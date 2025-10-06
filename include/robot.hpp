@@ -73,6 +73,12 @@ class SwerveDrive : public Sbtp1 {
         can->set_state(state);
         can->rotate_duty(duty, degree);
     }
+    void ps4ControlRotate(uint8_t is_cw, int8_t duty, uint8_t state) {
+        pidControl(false);
+        can->set_state(state);
+        uint8_t cw = is_cw ? 1 : 0;
+        can->rotate_robot(cw, duty);
+    }
 
     //タブレットに送信
     void sendTablet(){
@@ -107,11 +113,6 @@ class SwerveDrive : public Sbtp1 {
 
     // バイト配列 → 現在地の構造体
     void deserializeCommand(const uint8_t *buffer) {
-        //packet.command = buffer[0];
-        //p->x = this->bytesToInt32BE(buffer + 1);
-        //p->y = this->bytesToInt32BE(buffer + 5);
-        //p->deg100 = this->bytesToInt32BE(buffer + 9);
-
         p->x =  ( (int32_t)buffer[1] << 24 ) |
                 ( (int32_t)buffer[2] << 16 ) |
                 ( (int32_t)buffer[3] << 8  ) |
@@ -124,15 +125,6 @@ class SwerveDrive : public Sbtp1 {
                 ( (int32_t)buffer[10] << 16 ) |
                 ( (int32_t)buffer[11] << 8  ) |
                 ( (int32_t)buffer[12] );        
-    }
-
-    void get() {
-        Serial.print("X = ");
-        Serial.print(p->x);
-        Serial.print(" Y = ");
-        Serial.print(p->y);
-        Serial.print(" Theta = ");
-        Serial.println(p->deg100);
     }
 
     private:
@@ -156,13 +148,177 @@ class SwerveDrive : public Sbtp1 {
     CanSndividualSteering *can = new CanSndividualSteering;
 };
 
+//ロジャー
+class Roger : public Sbtp1{
+    public:
+    void reset() {
+        can->reset();
+    }
+    void setParameters(uint8_t duty_, uint8_t is_up) {
+        this->duty = duty_;
+        this->dir = is_up;
+    }
+    void sendCan() {
+        can->move(this->duty, this->dir);
+    }
+    private:
+    uint8_t duty;
+    uint8_t dir;
+    Elevator *can = new Elevator;
+};
 
+//右アーム(昇降含む)
+class RightArm : public Sbtp1 {
+    public:
+    RightArm() {
+        this->is_open = 0;
+        this->is_open_move = 0;
+        this->is_fold = 0;
+        this->is_fold_move = 0;
 
+        this->duty = 0;
+        this->is_up = 0;
+    }
+    void reset() {
+        can_ope->reset();
+        can_lift->reset();
+    }
+    //傾きのパラメータをセット
+    void setInclination(uint8_t is_open_, uint8_t is_move_) {
+        this->is_open = is_open_;
+        this->is_open_move = is_move_;
+    }
+    //掴むパラメータをセット
+    void setHand(uint8_t is_fold_, uint8_t is_move_) {
+        this->is_fold = is_fold_;
+        this->is_fold_move = is_move_;
+    }
+    //CAN送信
+    void sendCanArm() {
+        can_ope->move(this->is_open, this->is_open_move, this->is_fold, this->is_fold_move);
+    }
+    void setLiftParameters(uint8_t duty_, uint8_t is_up_) {
+        this->duty = duty_;
+        this->is_up = is_up_;
+    }
+    void sendCanLift() {
+        can_lift->move(this->duty, this->is_up);
+    }
+    private:
+    CanRightSideArm *can_ope = new CanRightSideArm;
+    CanRightSideArmElevator *can_lift = new CanRightSideArmElevator;
+    uint8_t is_open, is_open_move, is_fold, is_fold_move;
+    uint8_t duty, is_up;
+};
 
+//左アーム(昇降含む)
+class LeftArm : public Sbtp1 {
+    public:
+    LeftArm() {
+        this->is_open = 0;
+        this->is_open_move = 0;
+        this->is_fold = 0;
+        this->is_fold_move = 0;
 
+        this->duty = 0;
+        this->is_up = 0;
+    }
+    void reset() {
+        can_ope->reset();
+        can_lift->reset();
+    }
+    //傾きのパラメータをセット
+    void setInclination(uint8_t is_open_, uint8_t is_move_) {
+        this->is_open = is_open_;
+        this->is_open_move = is_move_;
+    }
+    //掴むパラメータをセット
+    void setHand(uint8_t is_fold_, uint8_t is_move_) {
+        this->is_fold = is_fold_;
+        this->is_fold_move = is_move_;
+    }
+    //CAN送信
+    void sendCanArm() {
+        can_ope->move(this->is_open, this->is_open_move, this->is_fold, this->is_fold_move);
+    }
+    void setLiftParameters(uint8_t duty_, uint8_t is_up_) {
+        this->duty = duty_;
+        this->is_up = is_up_;
+    }
+    void sendCanLift() {
+        can_lift->move(this->duty, this->is_up);
+    }
+    private:
+    CanLeftSideArm *can_ope = new CanLeftSideArm;
+    CanLeftSideArmElevator *can_lift = new CanLeftSideArmElevator;
+    uint8_t is_open, is_open_move, is_fold, is_fold_move;
+    uint8_t duty, is_up;
+};
 
-
-
-
-
-
+//ロボット全体
+class Robot {
+    public:
+    void init() {
+        str->reset();
+    }
+    void uart1CommandHandle(uint8_t *data){
+        switch (data[0])
+        {
+            case 0:
+                
+                break;
+            
+            default:
+                break;
+        }
+    }
+    void uart2CommandHandle(uint8_t *data){
+        switch (data[0])
+        {
+            //独ステ
+            case 0x10:
+                str->reset();
+                break;
+            case 0x11:
+                str->ps4Control(data[1], (int16_t)(data[2] << 8 | data[3]), data[4]);
+                break;
+            case 0x12:
+                str->ps4ControlRotate(data[1], data[2], data[3]);
+                break;
+            //ロジャー
+            case 0x20:
+                roger->setParameters(data[1], data[2]);
+                roger->sendCan();
+                break;
+            //右アーム動作
+            case 0x31:
+                right_arm->setInclination(data[1], data[2]);
+                right_arm->setHand(data[3], data[4]);
+                right_arm->sendCanArm();
+                break;
+            //左アーム動作
+            case 0x32:
+                left_arm->setInclination(data[1], data[2]);
+                left_arm->setHand(data[3], data[4]);
+                left_arm->sendCanArm();
+                break;  
+            //右アーム昇降
+            case 0x41:
+                right_arm->setLiftParameters(data[1],data[2]);
+                right_arm->sendCanLift();
+                break;         
+            //左アーム昇降
+            case 0x42:
+                left_arm->setLiftParameters(data[1],data[2]);
+                left_arm->sendCanLift();
+                break;                       
+            default:
+                break;
+        }
+    }
+    private:
+    SwerveDrive *str = new SwerveDrive();
+    Roger *roger = new Roger;
+    RightArm *right_arm = new RightArm();
+    LeftArm *left_arm = new LeftArm();
+};
