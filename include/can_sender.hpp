@@ -350,6 +350,83 @@ class CanLeftSideArm : public CanSender {
     const uint8_t RIGHT_ARM = 0x32;
 };
 
+class LinkArm: public CanSender {
+    public:
+    LinkArm(uint8_t id) {
+        this->arm_id = id;
+    }
+    static LinkArm* setRight() {
+        return new LinkArm(0x51);
+    }
+    static LinkArm* setLeft() {
+        return new LinkArm(0x52);
+    }
+    void stop() override {
+        uint32_t id = this->set_id(this->STOP, this->MY_ID, this->arm_id);
+        this->send(id);
+        delay(10);
+    }    
+    void reset() override {
+        uint32_t id = this->set_id(this->RESET, this->MY_ID, this->arm_id);
+        this->send(id);
+        delay(10);        
+    }
+    void setPoseNumber(uint8_t number) {
+        uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->arm_id);
+        uint8_t data[2] = {0x00, number};
+        this->send(id, data, 2);
+        delay(10);
+    }
+    void setPoseAngle(uint8_t theta1, uint8_t theta2) {
+        uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->arm_id);
+        uint8_t data[3] = {0x01, theta1, theta2};
+        this->send(id, data, 3);
+        delay(10);
+    }
+    void setPoseDuty(uint8_t duty1, uint8_t dir1, uint8_t duty2, uint8_t dir2) {
+        uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->arm_id);
+        uint8_t data[5] = {0x02, duty1, dir1, duty2, dir2};
+        this->send(id, data, 5);
+        delay(10);
+    }
+    private:
+    uint8_t arm_id;
+};
+
+class Suction: public CanSender {
+    public:
+    void stop() override {
+        uint32_t id = this->set_id(this->STOP, this->MY_ID, this->RIGHT_ID);
+        this->send(id);
+        delay(10);
+        id = this->set_id(this->STOP, this->MY_ID, this->LEFT_ID);
+        this->send(id);
+        delay(10);
+    }
+    void reset() override {
+        uint32_t id = this->set_id(this->RESET, this->MY_ID, this->RIGHT_ID);
+        this->send(id);
+        delay(10);
+        id = this->set_id(this->RESET, this->MY_ID, this->LEFT_ID);
+        this->send(id);
+        delay(10);
+    }
+    void move(uint8_t is_up) {
+        uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->RIGHT_ID);
+        uint8_t data[1] = {is_up};
+        this->send(id, data, 1);
+        delay(10);
+        id = this->set_id(this->CONTROL, this->MY_ID, this->LEFT_ID);
+        this->send(id, data, 1);
+        delay(10);
+    }
+    private:
+    const uint8_t RIGHT_ID = 0x61;
+    const uint8_t LEFT_ID  = 0x62;
+};
+
+
+/*
 //好一さんのアーム
 //| command elevator or arm | is_____ or stop 2|
 class CanFrontArm : public CanSender {
@@ -425,3 +502,5 @@ class CanFrontArm : public CanSender {
     const uint8_t RIGHT = 0x01;
     const uint8_t LEFT = 0x00;
 };
+
+*/

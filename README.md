@@ -153,7 +153,7 @@ Netetra作のプロトコルSBTPを使用します。  https://github.com/Netetr
 
 #### 共有アーム姿勢duty(right:`0x51` left:`0x52`)
 ```
-| 0x02 | duty1 | duty2 | 
+| 0x02 | duty1 | dir1 | duty2 | dir2 | 
 ```
 - `duty1`にはアームの肘にあたるduty比が入る(0から100)
 - `duty2`にはアームの手首にあたるduty比が入る(0から100)
