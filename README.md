@@ -25,6 +25,14 @@ Netetra作のプロトコルSBTPを使用します。  https://github.com/Netetr
 ```
 
 --- 
+#### 独立ステアリング現在値送信(esp -> raspi)
+```
+| 0x20 | x (uint32_t) | y (uint32_t) | theta x 100 (uint32_t) | 
+```
+- x, y の単位はmm
+- x, y にはマイナスの値も入る
+- theta の単位はdegree 角度の100の値を入れる
+
 
 #### 独立ステアリング目標値送信(raspi -> esp)
 ```
@@ -34,13 +42,33 @@ Netetra作のプロトコルSBTPを使用します。  https://github.com/Netetr
 - x, y にはマイナスの値も入る
 - theta の単位はdegree 角度の100の値を入れる
 
-#### 独立ステアリング現在値送信(esp -> raspi)
+#### 共有アームストップ
 ```
-| 0x20 | x (uint32_t) | y (uint32_t) | theta x 100 (uint32_t) | 
+| 0x50 |
 ```
-- x, y の単位はmm
-- x, y にはマイナスの値も入る
-- theta の単位はdegree 角度の100の値を入れる
+
+#### 共有アーム姿勢(right:`0x51` left:`0x52`)
+```
+| command | number (uint8_t) |
+```
+- `number`には各ボックスの番号が入る
+
+#### 共有アーム畳む1(right:`0x5A` left:`0x5B`)
+```
+| command |
+```
+
+#### 共有アーム畳む2(right:`0x5C` left:`0x5B`)
+```
+| command |
+```
+
+#### 共有アーム吸引
+```
+| 0x60 | is_on (uint8_t) |
+```
+- `is_on`には0か1が入る(onなら1)
+
 
 ---
 
@@ -62,7 +90,7 @@ Netetra作のプロトコルSBTPを使用します。  https://github.com/Netetr
 
 以下のものは`Commnad`が `CONTROL` の時の8byteのデータを示します。
 
-#### 独立ステアリング(0x01 0x02 0x03 0x04)
+#### 独立ステアリング `0x01 0x02 0x03 0x04`
 ```
 | 0x01 | theta | dir | duty | state |
 ```
@@ -71,14 +99,14 @@ Netetra作のプロトコルSBTPを使用します。  https://github.com/Netetr
 - `duty`には0から100の値が入る
 - `state`には0か1が入る
 
-#### ロジャー展開 (0x10)
+#### ロジャー展開 `0x10`
 ```
 | duty | is_up |
 ```
 - `duty`には0から100の値が入る
 - `is_up`には0か1が入る(上昇なら`1`)
 
-#### 右アーム動作 (0x31)
+#### 右アーム動作 `0x31`
 ```
 | is_open | is_open_move | is_fold | is_fold_move |
 ```
@@ -87,7 +115,7 @@ Netetra作のプロトコルSBTPを使用します。  https://github.com/Netetr
 - `is_fold`には1か0が入ります(掴むなら1)
 - `is_fold_move`には1か0が入ります(動くなら1)
 
-#### 左アーム動作 (0x32)
+#### 左アーム動作 `0x32`
 ```
 | is_open | is_open_move | is_fold | is_fold_move |
 ```
@@ -96,18 +124,43 @@ Netetra作のプロトコルSBTPを使用します。  https://github.com/Netetr
 - `is_fold`には1か0が入ります(掴むなら1)
 - `is_fold_move`には1か0が入ります(動くなら1)
 
-#### 右アーム昇降 (0x41)
+#### 右アーム昇降 `0x41`
 ``` 
 | duty | is_up | 
 ```
 - `duty`には0から100が入ります
 - `is_up`には1か0が入ります(上昇なら1)
 
-#### 左アーム昇降 (0x42)
+#### 左アーム昇降 `0x42`
 ```
 | duty | is_up | 
 ```
 - `duty`には0から100が入ります
 - `is_up`には1か0が入ります(上昇なら1)
 
+#### 共有アーム姿勢(right:`0x51` left:`0x52`)
+```
+| 0x00 | number |
+```
+- `number`には各ボックスの番号が入る
+
+#### 共有アーム姿勢角度(right:`0x51` left:`0x52`)
+```
+| 0x01 | theta1[deg] | theta2[deg] | 
+```
+- `theta1`にはアームの肘にあたる角度が入る(0から270)
+- `theta2`にはアームの手首にあたる角度が入る(0から180)
+
+#### 共有アーム姿勢duty(right:`0x51` left:`0x52`)
+```
+| 0x02 | duty1 | duty2 | 
+```
+- `duty1`にはアームの肘にあたるduty比が入る(0から100)
+- `duty2`にはアームの手首にあたるduty比が入る(0から100)
+
+#### 共有アーム吸引 (right:`0x61` left:`0x62`)
+```
+| is_on |
+```
+- `is_on`には0か1が入る(onなら1)
 
