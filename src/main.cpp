@@ -6,6 +6,7 @@
 
 //並列処理をします 
 //===========================================
+
 TaskHandle_t Task0;
 TaskHandle_t Task1;
 
@@ -35,7 +36,6 @@ const int ENCODER_PIN_B[2] = {34, 32};
 //===========================================
 
 Robot robot;
-//SwerveDrive str;
 
 //===========================================
 
@@ -53,7 +53,7 @@ void setup() {
   }
 
   Wire.begin();
-    // NDOFモードに設定
+  // NDOFモードに設定
   setMode(0x0C);
 
   delay(100);
@@ -64,19 +64,15 @@ void setup() {
   Serial.print("基準角度を設定: ");
   Serial.println(heading_offset);
 
-    //エンコーダー読み取り設定
+  //エンコーダー読み取り設定
   encoder1.attachHalfQuad(ENCODER_PIN_A[0], ENCODER_PIN_B[0]);
   encoder1.setCount(0);
   encoder2.attachHalfQuad(ENCODER_PIN_A[1], ENCODER_PIN_B[1]);
   encoder2.setCount(0);
 
-
   //コアの処理の決定
   xTaskCreatePinnedToCore(Task0Function, "Task0", 10000, NULL, 1, &Task0, 0);
   xTaskCreatePinnedToCore(Task1Function, "Task1", 10000, NULL, 1, &Task1, 1);
-
-  //str.setCoordinate(-55,-40,2);
-  //str.sendTablet();
 }
 
 //UART1 / UART2 / CAN
@@ -87,12 +83,12 @@ void Task0Function( void * pvParameters ) {
   for(;;) {
     //from raspi
     if(Sbtp1::receiveSBTP1(uart1_data,&uart1_len)) {
-      
       Serial.print("Received 1: ");
       for (int i = 0; i < uart1_len; i++) {
         Serial.printf("%02X ", uart1_data[i]);
       }
       Serial.println();
+      robot.uart1CommandHandle(uart1_data);
     }
     // from ps4
     if(Sbtp2::receiveSBTP2(uart2_data,&uart2_len)) {
@@ -101,11 +97,11 @@ void Task0Function( void * pvParameters ) {
         Serial.printf("%02X ", uart2_data[i]);
       }
       Serial.println();
-      //uart2CommandCheck(uart2_data);
+     
       robot.uart2CommandHandle(uart2_data);
     }
-    //str.get();
-    delay(5);
+    
+    delay(2);
   }
 }
 
@@ -115,7 +111,7 @@ void Task1Function( void * pvParameters ) {
   for(;;) {
     if(millis() - prev_time >= 10) {
       prev_time = millis();
-      onTimer();
+      //onTimer();
     }
   }
 }
@@ -156,7 +152,6 @@ void onTimer() {
   x += vx * 0.01 * cos(theta) - vy * 0.01 * sin(theta);
   y += vx * 0.01 * sin(theta) + vy * 0.01 * cos(theta);
 
-  /*
   Serial.print("X = ");
   Serial.print(x);
   Serial.print(" Y = ");
@@ -164,5 +159,6 @@ void onTimer() {
   Serial.print(" Theta = ");
   Serial.print(-relative_heading); 
   Serial.println();
-  */
+  
 }
+

@@ -62,7 +62,6 @@ class SwerveDrive : public Sbtp1 {
             int str_degree = atan2(vy, vx) * 180 / PI;
 
             if(str_duty > 50) str_duty = 50;
-
             can->unit_rotate_duty(str_duty, str_degree, i);
         }
     }
@@ -164,7 +163,7 @@ class Roger : public Sbtp1{
     private:
     uint8_t duty;
     uint8_t dir;
-    Elevator *can = new Elevator;
+    Elevator *can = new Elevator();
 };
 
 //右アーム(昇降含む)
@@ -255,19 +254,84 @@ class LeftArm : public Sbtp1 {
     uint8_t duty, is_up;
 };
 
+class FrontArm: public Sbtp1 {
+    public:
+    void reset() {
+        right_can->reset();
+        left_can->reset();
+        suc->reset();
+    }
+    void stop() {
+        right_can->stop();
+        left_can->stop();
+        suc->stop();
+    }
+    void stopRight() {
+        right_can->stop();
+    }
+    void stopLeft() {
+        left_can->stop();
+    }
+    //各ボックスの番号で制御
+    void setNumber(uint8_t number) {
+        right_can->setPoseNumber(number);
+        left_can->setPoseNumber(number);
+    }
+    void setNumberRight(uint8_t number) {
+        right_can->setPoseNumber(number);
+    }
+    void setNumberLeft(uint8_t number) {
+        left_can->setPoseNumber(number);
+    }
+    //角度で制御
+    void setAngle(uint8_t theta1, uint8_t theta2) {
+        right_can->setPoseAngle(theta1, theta2);
+        left_can->setPoseAngle(theta1, theta2);
+    }
+    void setAngleRight(uint8_t theta1, uint8_t theta2) {
+        right_can->setPoseAngle(theta1, theta2);
+    }
+    void setAngleLeft(uint8_t theta1, uint8_t theta2) {
+        left_can->setPoseAngle(theta1, theta2);
+    }
+    //dutyで制御
+    void setDuty(uint8_t duty1, uint8_t dir1, uint8_t duty2, uint8_t dir2) {
+        right_can->setPoseDuty(duty1, dir1, duty2, dir2);
+        left_can->setPoseDuty(duty1, dir1, duty2, dir2);
+    }
+    void setDutyRight(uint8_t duty1, uint8_t dir1, uint8_t duty2, uint8_t dir2) {
+        right_can->setPoseDuty(duty1, dir1, duty2, dir2);
+    }
+    void setDutyLeft(uint8_t duty1, uint8_t dir1, uint8_t duty2, uint8_t dir2) {
+        left_can->setPoseDuty(duty1, dir1, duty2, dir2);
+    }
+
+    void suction(uint8_t is_on) {
+        suc->move(is_on);
+    }
+
+    private:
+    LinkArm* right_can = new LinkArm(0x51);
+    LinkArm* left_can  = new LinkArm(0x52);
+    Suction* suc   = new Suction();
+};
+
 //ロボット全体
 class Robot {
     public:
     void init() {
         str->reset();
     }
+    void pong() {
+        uint8_t send_data[1] = {0x03};
+        sbtp->sendData(send_data, 1);
+    }
     void uart1CommandHandle(uint8_t *data){
         switch (data[0])
         {
-            case 0:
-                
+            case 0x01:
+                this->pong();
                 break;
-            
             default:
                 break;
         }
@@ -311,14 +375,26 @@ class Robot {
             case 0x42:
                 left_arm->setLiftParameters(data[1],data[2]);
                 left_arm->sendCanLift();
-                break;                       
+                break;        
+            //共有アーム
+            case 0x51:
+                front_arm->setDutyRight(data[1],data[2],data[3],data[4]);
+                break;
+            case 0x52:
+                front_arm->setDutyLeft(data[1],data[2],data[3],data[4]);
+                break;
+            case 0x60:
+                front_arm->suction(data[1]);
+                break;
             default:
                 break;
         }
     }
     private:
-    SwerveDrive *str = new SwerveDrive();
-    Roger *roger = new Roger;
-    RightArm *right_arm = new RightArm();
-    LeftArm *left_arm = new LeftArm();
+    Sbtp1       *sbtp      = new Sbtp1();
+    SwerveDrive *str       = new SwerveDrive();
+    Roger       *roger     = new Roger();
+    RightArm    *right_arm = new RightArm();
+    LeftArm     *left_arm  = new LeftArm();
+    FrontArm    *front_arm = new FrontArm();
 };

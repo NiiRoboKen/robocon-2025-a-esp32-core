@@ -211,20 +211,9 @@ class Elevator: public CanSender {
         uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->ELEVATOR_ID);
         uint8_t data[2] = {duty, is_up};
         this->send(id, data, 2);
+        delay(2);
     }
-    //多分使わん
-    void move(bool is_up) {
-        uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->ELEVATOR_ID);
-        uint8_t data[1];
-        if(is_up) {
-            data[0] = UP;
-        }
-        else{
-            data[0] = DOWN;
-        }
-        this->send(id, data, 1);
-    }
-
+    
     private:
     const uint8_t ELEVATOR_ID = 0x10;
     const uint8_t UP = 0x01;
@@ -237,17 +226,18 @@ class CanRightSideArmElevator: public CanSender {
     void stop() override {
         uint32_t id = this->set_id(this->STOP, this->MY_ID, this->RIGHT_ELEVATOR_ID);
         this->send(id);
-        delay(10);
+        delay(5);
     }
     void reset() override {
         uint32_t id = this->set_id(this->RESET, this->MY_ID, this->RIGHT_ELEVATOR_ID);
         this->send(id);
-        delay(10);
+        delay(5);
     }
     void move(uint8_t duty, uint8_t is_up) {
         uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->RIGHT_ELEVATOR_ID);
         uint8_t data[2] = {duty, is_up};
         this->send(id, data, 2);
+        delay(5);
     }
     void move(bool is_up){
         uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->RIGHT_ELEVATOR_ID);
@@ -274,29 +264,18 @@ class CanLeftSideArmElevator: public CanSender {
     void stop() override {
         uint8_t id = this->set_id(this->STOP, this->MY_ID, this->LEFT_ELEVATOR_ID);
         this->send(id);
-        delay(10);
+        delay(5);
     }
     void reset() override {
         uint8_t id = this->set_id(this->RESET, this->MY_ID, this->LEFT_ELEVATOR_ID);
         this->send(id);
-        delay(10);
+        delay(5);
     }
     void move(uint8_t duty, uint8_t is_up) {
         uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->LEFT_ELEVATOR_ID);
         uint8_t data[2] = {duty, is_up};
         this->send(id, data, 2);
-    }
-    //多分使わん
-    void move(bool is_up){
-        uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->LEFT_ELEVATOR_ID);
-        uint8_t data[1];
-        if(is_up) {
-            data[0] = UP;
-        }
-        else{
-            data[0] = DOWN;
-        }
-        this->send(id, data, 1);
+        delay(5);
     }
     private:
     const uint8_t LEFT_ELEVATOR_ID = 0x42;
@@ -310,18 +289,18 @@ class CanRightSideArm : public CanSender {
     void stop() override {
         uint32_t id = this->set_id(this->STOP, this->MY_ID, this->RIGHT_ARM);
         this->send(id);
-        delay(10);
+        delay(5);
     }
     void reset() override {
         uint32_t id = this->set_id(this->RESET, this->MY_ID, this->RIGHT_ARM);
         this->send(id);
-        delay(10);        
+        delay(5);        
     }
     void move(uint8_t is_open, uint8_t is_open_move, uint8_t is_fold, uint8_t is_fold_move){
         uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->RIGHT_ARM);
         uint8_t data[4] = { is_open, is_open_move, is_fold, is_fold_move};
         this->send(id, data, 4);
-        delay(10);
+        delay(5);
     }
     private:
     const uint8_t RIGHT_ARM = 0x31;
@@ -333,174 +312,90 @@ class CanLeftSideArm : public CanSender {
     void stop() override {
         uint32_t id = this->set_id(this->STOP, this->MY_ID, this->RIGHT_ARM);
         this->send(id);
-        delay(10);
+        delay(5);
     }
     void reset() override {
         uint32_t id = this->set_id(this->RESET, this->MY_ID, this->RIGHT_ARM);
         this->send(id);
-        delay(10);        
+        delay(5);        
     }
     void move(uint8_t is_open, uint8_t is_open_move, uint8_t is_fold, uint8_t is_fold_move){
         uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->RIGHT_ARM);
         uint8_t data[4] = { is_open, is_open_move, is_fold, is_fold_move};
         this->send(id, data, 4);
-        delay(10);
+        delay(5);
     }
     private:
     const uint8_t RIGHT_ARM = 0x32;
 };
 
+//共有アーム
 class LinkArm: public CanSender {
     public:
     LinkArm(uint8_t id) {
         this->arm_id = id;
     }
-    static LinkArm* setRight() {
-        return new LinkArm(0x51);
-    }
-    static LinkArm* setLeft() {
-        return new LinkArm(0x52);
-    }
     void stop() override {
         uint32_t id = this->set_id(this->STOP, this->MY_ID, this->arm_id);
         this->send(id);
-        delay(10);
+        delay(3);
     }    
     void reset() override {
         uint32_t id = this->set_id(this->RESET, this->MY_ID, this->arm_id);
         this->send(id);
-        delay(10);        
+        delay(3);        
     }
     void setPoseNumber(uint8_t number) {
         uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->arm_id);
         uint8_t data[2] = {0x00, number};
         this->send(id, data, 2);
-        delay(10);
+        delay(3);
     }
     void setPoseAngle(uint8_t theta1, uint8_t theta2) {
         uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->arm_id);
         uint8_t data[3] = {0x01, theta1, theta2};
         this->send(id, data, 3);
-        delay(10);
+        delay(3);
     }
     void setPoseDuty(uint8_t duty1, uint8_t dir1, uint8_t duty2, uint8_t dir2) {
         uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->arm_id);
         uint8_t data[5] = {0x02, duty1, dir1, duty2, dir2};
         this->send(id, data, 5);
-        delay(10);
+        delay(3);
     }
     private:
     uint8_t arm_id;
 };
 
+//吸引
 class Suction: public CanSender {
     public:
     void stop() override {
         uint32_t id = this->set_id(this->STOP, this->MY_ID, this->RIGHT_ID);
         this->send(id);
-        delay(10);
+        delay(3);
         id = this->set_id(this->STOP, this->MY_ID, this->LEFT_ID);
         this->send(id);
-        delay(10);
+        delay(3);
     }
     void reset() override {
         uint32_t id = this->set_id(this->RESET, this->MY_ID, this->RIGHT_ID);
         this->send(id);
-        delay(10);
+        delay(3);
         id = this->set_id(this->RESET, this->MY_ID, this->LEFT_ID);
         this->send(id);
-        delay(10);
+        delay(3);
     }
     void move(uint8_t is_up) {
         uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->RIGHT_ID);
         uint8_t data[1] = {is_up};
         this->send(id, data, 1);
-        delay(10);
+        delay(3);
         id = this->set_id(this->CONTROL, this->MY_ID, this->LEFT_ID);
         this->send(id, data, 1);
-        delay(10);
+        delay(3);
     }
     private:
     const uint8_t RIGHT_ID = 0x61;
     const uint8_t LEFT_ID  = 0x62;
 };
-
-
-/*
-//好一さんのアーム
-//| command elevator or arm | is_____ or stop 2|
-class CanFrontArm : public CanSender {
-    public:
-    void stop() override {
-        uint32_t id = set_id(this->STOP, this->MY_ID, this->FRONT_ELEVATOR);
-        this->send(id);
-        delay(10);
-        id = set_id(this->STOP, this->MY_ID, this->FRONT_ARM);
-        this->send(id);
-        delay(10);
-        return;
-    }
-    void reset() override {
-        uint32_t id = set_id(this->RESET, this->MY_ID, this->FRONT_ELEVATOR);
-        this->send(id);
-        delay(10);
-        id = set_id(this->RESET, this->MY_ID, this->FRONT_ARM);
-        this->send(id);
-        delay(10);
-        return;
-    }
-    void ping() override {
-        uint32_t id = set_id(this->PING, this->MY_ID, this->FRONT_ELEVATOR);
-        this->send(id);
-        delay(10);
-        id = set_id(this->PING, this->MY_ID, this->FRONT_ARM);
-        this->send(id);
-        delay(10);
-        return;
-    }
-    void moveElevator(bool is_move, bool is_up){
-        uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->FRONT_ELEVATOR);
-        uint8_t data[2];
-        data[0] = 1;
-        if(!is_move) data[1] = 2;
-        else data[1] = is_up ? UP : DOWN;
-        this->send(id, data, 2);
-    }
-    void rotate(bool is_move, bool is_right) {
-        uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->FRONT_ELEVATOR);
-        uint8_t data[1];
-        data[0] = 0;
-        if(!is_move) data[1] = 2;
-        else data[1] = is_right ? UP : DOWN;
-        this->send(id, data, 2);
-    }
-    void foldBox(bool is_move, bool is_fold) {
-        uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->FRONT_ARM);
-        uint8_t data[2];
-        data[0] = 1;
-        if(!is_move) data[1] = 2;
-        else data[1] = is_fold ? this->OPEN : this->CLOSE;
-        this->send(id, data, 2);
-    }
-    void setTilt(bool is_move, bool is_front) {
-        uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->FRONT_ARM);
-        uint8_t data[2];
-        data[0] = 0;
-        if(!is_move) data[1] = 2;
-        else data[1] = is_front ? this->OPEN : this->CLOSE;
-        this->send(id, data, 2);
-    }
-    
-    private:
-    const uint8_t FRONT_ELEVATOR = 0x13;
-    const uint8_t FRONT_ARM = 0x33;
-
-    const uint8_t UP = 0x01;
-    const uint8_t DOWN = 0x00;
-    const uint8_t OPEN = 0x01;
-    const uint8_t CLOSE = 0x00;
-    const uint8_t RIGHT = 0x01;
-    const uint8_t LEFT = 0x00;
-};
-
-*/

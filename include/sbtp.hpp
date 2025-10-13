@@ -76,7 +76,6 @@ class Sbtp1 {
         return false; // まだフレーム未完成
     }
 
-    protected:
     void sendData(uint8_t data[], uint8_t len) {
         // CRC計算
         uint8_t crc = this->crc8(data, len);
@@ -98,7 +97,7 @@ class Sbtp1 {
         Serial1.write(crc);          // CRC
         Serial1.write(EOF_);         // EOF
     }
-
+   protected:
     static uint8_t crc8(uint8_t *data, uint8_t len) {
         const uint8_t CRC8_GENERATE_POLYNOMIAL = 0xD5;
         const uint8_t CRC8_INITIAL_VALUE = 0xFF;
