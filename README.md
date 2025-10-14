@@ -94,6 +94,14 @@ Netetra作のプロトコルSBTPを使用します。  https://github.com/Netetr
 ```
 - 下側に畳む
 
+#### 共有アームスタート
+```
+| 0x5A |
+```
+- 本番最初の一回だけ送る
+- これを送らないとPID制御が始まらない
+
+
 #### 共有アーム吸引
 ```
 | 0x60 | is_on (uint8_t) |
@@ -177,10 +185,11 @@ Netetra作のプロトコルSBTPを使用します。  https://github.com/Netetr
 
 #### 共有アーム姿勢角度(right:`0x51` left:`0x52`)
 ```
-| 0x01 | theta1[deg] | theta2[deg] | 
+| 0x01 | theta1[deg] | isNegative1 | theta2[deg] | isNegative2 |
 ```
-- `theta1`にはアームの肘にあたる角度が入る(0から270)
+- `theta1`にはアームの肘にあたる角度が入る(0から180)
 - `theta2`にはアームの手首にあたる角度が入る(0から180)
+- `isNegative1`と`isNegative2`には`theta1` `theta2`それぞれの値が正か負かを入れる(正なら1)
 
 #### 共有アーム姿勢duty(right:`0x51` left:`0x52`)
 ```
@@ -188,6 +197,13 @@ Netetra作のプロトコルSBTPを使用します。  https://github.com/Netetr
 ```
 - `duty1`にはアームの肘にあたるduty比が入る(0から100)
 - `duty2`にはアームの手首にあたるduty比が入る(0から100)
+
+#### 共有アームスタート(right:`0x51` left:`0x52`)
+```
+| 0x03 |
+```
+- 本番最初の一回だけ送る
+- これを送らないとPID制御が始まらない
 
 #### 共有アーム吸引 (right:`0x61` left:`0x62`)
 ```
