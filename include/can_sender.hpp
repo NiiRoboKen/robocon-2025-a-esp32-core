@@ -213,9 +213,23 @@ class Elevator: public CanSender {
         this->send(id, data, 2);
         delay(2);
     }
-    
+    void moveRight(uint8_t duty, uint8_t is_up) {
+        uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->ELEVATOR_RIGHT_ID);
+        uint8_t data[2] = {duty, is_up};
+        this->send(id, data, 2);
+        delay(2);
+    }    
+    void moveLeft(uint8_t duty, uint8_t is_up) {
+        uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->ELEVATOR_LEFT_ID);
+        uint8_t data[2] = {duty, is_up};
+        this->send(id, data, 2);
+        delay(2);
+    }
     private:
     const uint8_t ELEVATOR_ID = 0x10;
+    const uint8_t ELEVATOR_RIGHT_ID = 0x11;
+    const uint8_t ELEVATOR_LEFT_ID = 0x12;
+
     const uint8_t UP = 0x01;
     const uint8_t DOWN = 0x00;
 };
@@ -345,16 +359,28 @@ class LinkArm: public CanSender {
         this->send(id);
         delay(3);        
     }
+    void start() {
+        uint32_t id = this->set_id(this->RESET, this->MY_ID, this->arm_id);
+        uint8_t data[1] = {0x5A};
+        this->send(id, data, 2);
+        delay(3);    
+    }
     void setPoseNumber(uint8_t number) {
         uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->arm_id);
         uint8_t data[2] = {0x00, number};
         this->send(id, data, 2);
         delay(3);
     }
-    void setPoseAngle(uint8_t theta1, uint8_t theta2) {
+    void setPoseAngle(int theta1, int theta2) {
+        uint8_t deg1, deg2, isNegative1, isNegative2;
+        isNegative1 = (theta1 > 0) ? 1 : 0;
+        isNegative2 = (theta2 > 0) ? 1 : 0;
+        deg1 = (uint8_t)abs(theta1);
+        deg2 = (uint8_t)abs(theta2);
+        
         uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->arm_id);
-        uint8_t data[3] = {0x01, theta1, theta2};
-        this->send(id, data, 3);
+        uint8_t data[5] = {0x01, deg1, isNegative1, deg2, isNegative2};
+        this->send(id, data, 5);
         delay(3);
     }
     void setPoseDuty(uint8_t duty1, uint8_t dir1, uint8_t duty2, uint8_t dir2) {
@@ -386,12 +412,24 @@ class Suction: public CanSender {
         this->send(id);
         delay(3);
     }
-    void move(uint8_t is_up) {
+    void move(uint8_t is_on) {
         uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->RIGHT_ID);
-        uint8_t data[1] = {is_up};
+        uint8_t data[1] = {is_on};
         this->send(id, data, 1);
         delay(3);
         id = this->set_id(this->CONTROL, this->MY_ID, this->LEFT_ID);
+        this->send(id, data, 1);
+        delay(3);
+    }
+    void moveRight(uint8_t is_on) {
+        uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->RIGHT_ID);
+        uint8_t data[1] = {is_on};
+        this->send(id, data, 1);
+        delay(3);
+    }
+    void moveLeft(uint8_t is_on) {
+        uint8_t id = this->set_id(this->CONTROL, this->MY_ID, this->LEFT_ID);
+        uint8_t data[1] = {is_on};
         this->send(id, data, 1);
         delay(3);
     }
