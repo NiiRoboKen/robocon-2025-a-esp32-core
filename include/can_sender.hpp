@@ -428,7 +428,7 @@ class Suction: public CanSender {
         delay(3);
     }
     void moveLeft(uint8_t is_on) {
-        uint8_t id = this->set_id(this->CONTROL, this->MY_ID, this->LEFT_ID);
+        uint32_t id = this->set_id(this->CONTROL, this->MY_ID, this->LEFT_ID);
         uint8_t data[1] = {is_on};
         this->send(id, data, 1);
         delay(3);
