@@ -142,7 +142,7 @@ Netetra作のプロトコルSBTPを使用します。  https://github.com/Netetr
 ```
 - `is_on`には0か1が入る(onなら1)
 
-#### 共有アーム吸引 (Right `0x51` Left `0x52`)
+#### 共有アーム吸引 (Right `0x61` Left `0x62`)
 ```
 | command | is_on (uint8_t) |
 ```
