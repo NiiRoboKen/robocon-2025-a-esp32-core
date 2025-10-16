@@ -24,6 +24,11 @@ Netetra作のプロトコルSBTPを使用します。  https://github.com/Netetr
 | 0x02 | error code (uint_8)|
 ```
 
+#### pong
+```
+| 0x03 |
+```
+
 #### 非常停止
 ```
 | 0x0A |
