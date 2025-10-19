@@ -16,6 +16,10 @@ class SwerveDrive : public Sbtp1 {
     void reset() {
         can->reset();
     }
+    void stop() {
+        can->stop();
+        Serial.println("str");
+    }
     //現在の座標をセット
     void setCoordinate(int32_t x, int32_t y, int32_t deg) {
         p->x = (int32_t)(x * 10);
@@ -153,16 +157,21 @@ class Roger : public Sbtp1{
     void reset() {
         can->reset();
     }
-    void setParameters(uint8_t duty_, uint8_t is_up) {
-        this->duty = duty_;
-        this->dir = is_up;
+    void stop() {
+        can->stop();
+        Serial.println("roger");
     }
-    void sendCan() {
-        can->move(this->duty, this->dir);
+    void sendCan(uint8_t duty,uint8_t is_up) {
+        can->move(duty, is_up);
     }
+    void sendCanRight(uint8_t duty,uint8_t is_up) {
+        can->moveRight(duty, is_up);
+    }
+    void sendCanLeft(uint8_t duty,uint8_t is_up) {
+        can->moveLeft(duty, is_up);
+    }
+
     private:
-    uint8_t duty;
-    uint8_t dir;
     Elevator *can = new Elevator();
 };
 
@@ -181,6 +190,11 @@ class RightArm : public Sbtp1 {
     void reset() {
         can_ope->reset();
         can_lift->reset();
+    }
+    void stop() {
+        can_ope->stop();
+        can_lift->stop();
+        Serial.println("right arm");
     }
     //傾きのパラメータをセット
     void setInclination(uint8_t is_open_, uint8_t is_move_) {
@@ -226,6 +240,11 @@ class LeftArm : public Sbtp1 {
         can_ope->reset();
         can_lift->reset();
     }
+    void stop() {
+        can_ope->stop();
+        can_lift->stop();
+        Serial.println("left aem");
+    }
     //傾きのパラメータをセット
     void setInclination(uint8_t is_open_, uint8_t is_move_) {
         this->is_open = is_open_;
@@ -254,6 +273,7 @@ class LeftArm : public Sbtp1 {
     uint8_t duty, is_up;
 };
 
+//共有アーム
 class FrontArm: public Sbtp1 {
     public:
     void reset() {
@@ -265,12 +285,23 @@ class FrontArm: public Sbtp1 {
         right_can->stop();
         left_can->stop();
         suc->stop();
+        Serial.println("frot arm");
     }
     void stopRight() {
         right_can->stop();
     }
     void stopLeft() {
         left_can->stop();
+    }
+    void start() {
+        right_can->start();
+        left_can->start();
+    }
+    void startRight() {
+        right_can->start();
+    }
+    void startLeft() {
+        left_can->start();
     }
     //各ボックスの番号で制御
     void setNumber(uint8_t number) {
@@ -283,15 +314,15 @@ class FrontArm: public Sbtp1 {
     void setNumberLeft(uint8_t number) {
         left_can->setPoseNumber(number);
     }
-    //角度で制御
-    void setAngle(uint8_t theta1, uint8_t theta2) {
+    //角度で制御(degree)
+    void setAngle(int theta1, int theta2) {
         right_can->setPoseAngle(theta1, theta2);
         left_can->setPoseAngle(theta1, theta2);
     }
-    void setAngleRight(uint8_t theta1, uint8_t theta2) {
+    void setAngleRight(int theta1, int theta2) {
         right_can->setPoseAngle(theta1, theta2);
     }
-    void setAngleLeft(uint8_t theta1, uint8_t theta2) {
+    void setAngleLeft(int theta1, int theta2) {
         left_can->setPoseAngle(theta1, theta2);
     }
     //dutyで制御
@@ -308,6 +339,12 @@ class FrontArm: public Sbtp1 {
 
     void suction(uint8_t is_on) {
         suc->move(is_on);
+    }
+    void suctionRight(uint8_t is_on) {
+        suc->moveRight(is_on);
+    }
+    void suctionLeft(uint8_t is_on) {
+        suc->moveLeft(is_on);
     }
 
     private:
@@ -326,12 +363,147 @@ class Robot {
         uint8_t send_data[1] = {0x03};
         sbtp->sendData(send_data, 1);
     }
+    void stop() {
+        str->ps4Control(0,90,0);
+        roger->sendCan(0,0);
+        right_arm->setInclination(0, 0);
+        right_arm->setHand(0,0);
+        right_arm->sendCanArm();
+        left_arm->setInclination(0, 0);
+        left_arm->setHand(0,0);
+        left_arm->sendCanArm();
+        front_arm->setDutyRight(0,0,0,0);
+    }
     void uart1CommandHandle(uint8_t *data){
         switch (data[0])
         {
             case 0x01:
                 this->pong();
                 break;
+            case 0x0A:
+                this->stop();
+                break;
+
+            //sideアーム展開(All)
+            case 0x30:
+                right_arm->setInclination(1, 1);
+                right_arm->setHand(0,0);
+                right_arm->sendCanArm();
+                left_arm->setInclination(1, 1);
+                left_arm->setHand(0,0);
+                left_arm->sendCanArm();
+                break;
+            //sideアーム展開(Right)
+            case 0x31:
+                right_arm->setInclination(1, 1);
+                right_arm->setHand(0,0);
+                right_arm->sendCanArm();
+                break;
+            //sideアーム展開(Left)
+            case 0x32:
+                left_arm->setInclination(1, 1);
+                left_arm->setHand(0,0);
+                left_arm->sendCanArm();
+                break;
+
+            //アーム開く(最大)
+            case 0x33:
+                right_arm->setInclination(0, 0);
+                right_arm->setHand(0,1);
+                right_arm->sendCanArm();
+                left_arm->setInclination(0, 0);
+                left_arm->setHand(0,1);
+                left_arm->sendCanArm();
+                break;
+
+            //sideアーム収納(All)
+            case 0x34:
+                right_arm->setInclination(0, 1);
+                right_arm->setHand(0,0);
+                right_arm->sendCanArm();
+                left_arm->setInclination(0, 1);
+                left_arm->setHand(0,0);
+                left_arm->sendCanArm();
+                break;
+            //sideアーム収納(Right)
+            case 0x35:
+                right_arm->setInclination(0, 1);
+                right_arm->setHand(0,0);
+                right_arm->sendCanArm();
+                break;
+            //sideアーム収納(Left)
+            case 0x36:
+                left_arm->setInclination(0, 1);
+                left_arm->setHand(0,0);
+                left_arm->sendCanArm();
+                break;
+
+            //共有アームストップ(All)
+            case 0x50:
+                //front_arm->stop();
+                front_arm->setDutyRight(0,0,0,0);
+                break;
+            //共有アームストップ(Right)
+            case 0x51:
+                //front_arm->stopRight();
+                front_arm->setDutyRight(0,0,0,0);
+                break;
+            //共有アームストップ(Left)
+            case 0x52:
+                //front_arm->stopLeft();
+                front_arm->setDutyLeft(0,0,0,0);
+                break;
+
+            //共有アーム天井上げる
+            case 0x53:
+                front_arm->setAngle(45,45);
+                break;
+                
+            //共有アーム回収モード
+            case 0x54:
+                front_arm->setAngle(-45,-45);
+                break;
+            //共有アーム畳む 上(All)
+            case 0x55:
+                front_arm->setAngle(170,0);
+                break;
+            //共有アーム畳む 前(All)
+            case 0x56:
+                front_arm->setAngle(-65,0);
+                break;
+            //共有アーム畳む 前(Right)
+            case 0x57:
+                front_arm->setAngleRight(-65,0);
+                break;
+            //共有アーム畳む 前(Left)
+            case 0x58:
+                front_arm->setAngleLeft(-65,0);
+                break;
+
+            //共有アームスタート(All)
+            case 0x5A:
+                front_arm->start();
+                break;
+            //共有アームスタート(Right)
+            case 0x5B:
+                front_arm->startRight();
+                break;
+            //共有アームスタート(Left)
+            case 0x5C:
+                front_arm->startLeft();
+                break;
+            
+            //吸引(All)
+            case 0x60:
+                front_arm->suction(data[1]);
+                break;
+            case 0x61:
+                front_arm->suction(data[1]);
+                break;
+            case 0x62:
+                front_arm->suction(data[1]);
+                break;
+
             default:
                 break;
         }
@@ -351,8 +523,13 @@ class Robot {
                 break;
             //ロジャー
             case 0x20:
-                roger->setParameters(data[1], data[2]);
-                roger->sendCan();
+                roger->sendCan(data[1],data[2]);
+                break;
+            case 0x21:
+                roger->sendCanRight(data[1],data[2]);
+                break;
+            case 0x22:
+                roger->sendCanLeft(data[1], data[2]);
                 break;
             //右アーム動作
             case 0x31:
@@ -383,9 +560,16 @@ class Robot {
             case 0x52:
                 front_arm->setDutyLeft(data[1],data[2],data[3],data[4]);
                 break;
+            //吸引
             case 0x60:
                 front_arm->suction(data[1]);
+                break;       
+            case 0x61:
+                front_arm->suctionRight(data[1]);
                 break;
+            case 0x62:
+                front_arm->suctionLeft(data[1]);
+                break;        
             default:
                 break;
         }
